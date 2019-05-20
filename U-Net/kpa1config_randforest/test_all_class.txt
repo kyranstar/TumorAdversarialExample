@@ -1,0 +1,91 @@
+[data]
+data_root         = ../../Data 1/Pre-operative_TCGA_LGG_NIfTI_and_Segmentations/
+save_folder       = kpa1result17
+data_names        = kpa1config/test_names_temp.txt
+modality_postfix  = [flair, t1, t1Gd, t2]
+file_postfix      = nii.gz
+
+[network1ax]
+net_type            = RandForest
+net_name            = RandForest_WT32
+downsample_twice    = True
+data_shape          = [19, 180, 160, 4]
+label_shape         = [11, 180, 160, 1]
+class_num           = 2
+model_file          = model17/randforest_wt32_20000.ckpt
+
+[network1sg]
+net_type            = RandForest
+net_name            = RandForest_WT32sg
+downsample_twice    = True
+data_shape          = [19, 160, 180, 4]
+label_shape         = [11, 160, 180, 1]
+class_num           = 2
+model_file          = model17/randforest_wt32sg_20000.ckpt
+
+[network1cr]
+net_type            = RandForest
+net_name            = RandForest_WT32cr
+downsample_twice    = True
+data_shape          = [19, 160, 160, 4]
+label_shape         = [11, 160, 160, 1]
+class_num           = 2
+model_file          = model17/randforest_wt32cr_20000.ckpt
+
+
+[network2ax]
+net_type            = RandForest
+net_name            = RandForest_TC32
+downsample_twice    = True
+data_shape          = [19, 96, 96, 4]
+label_shape         = [11, 96, 96, 1]
+class_num           = 2
+model_file          = model17/randforest_tc32_20000.ckpt
+
+[network2sg]
+net_type            = RandForest
+net_name            = RandForest_TC32sg
+downsample_twice    = True
+data_shape          = [19, 96, 96, 4]
+label_shape         = [11, 96, 96, 1]
+class_num           = 2
+model_file          = model17/randforest_tc32sg_20000.ckpt
+
+[network2cr]
+net_type            = RandForest
+net_name            = RandForest_TC32cr
+downsample_twice    = True
+data_shape          = [19, 96, 96, 4]
+label_shape         = [11, 96, 96, 1]
+class_num           = 2
+model_file          = model17/randforest_tc32cr_20000.ckpt
+
+[network3ax]
+net_type            = RandForest
+net_name            = RandForest_EN32
+downsample_twice    = False
+data_shape          = [19, 96, 96, 4]
+label_shape         = [11, 96, 96, 1]
+class_num           = 2
+model_file          = model17/randforest_en32_20000.ckpt
+
+[network3sg]
+net_type            = RandForest
+net_name            = RandForest_EN32sg
+downsample_twice    = False
+data_shape          = [19, 96, 96, 4]
+label_shape         = [11, 96, 96, 1]
+class_num           = 2
+model_file          = model17/randforest_en32sg_20000.ckpt
+
+[network3cr]
+net_type            = RandForest
+net_name            = RandForest_EN32cr
+downsample_twice    = False
+data_shape          = [19, 96, 96, 4]
+label_shape         = [11, 96, 96, 1]
+class_num           = 2
+model_file          = model17/randforest_en32cr_20000.ckpt
+
+[testing]
+test_slice_direction = all
