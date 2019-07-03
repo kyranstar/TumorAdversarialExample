@@ -48,7 +48,7 @@ class DataLoader():
         """
         # use pre-defined patient names
         if(self.data_names is not None):
-            assert(os.path.isfile(self.data_names))
+            assert(os.path.isfile(self.data_names)), ("Data names: %s" % self.data_names)
             with open(self.data_names) as f:
                 content = f.readlines()
             patient_names = [x.strip() for x in content]
@@ -220,7 +220,7 @@ class DataLoader():
             center_point = get_random_roi_sampling_center(volume_shape, sub_label_shape, batch_sample_model, boundingbox)
             sub_data = []
             for moda in range(len(transposed_volumes)):
-                sub_data_moda = extract_roi_from_volume(transposed_volumes[moda],center_point,sub_data_shape)
+                sub_data_moda = extract_roi_from_volume(transposed_volumes[moda], center_point, sub_data_shape)
                 if(flip):
                     sub_data_moda = np.flip(sub_data_moda, -1)
                 if(down_sample_rate != 1.0):
@@ -233,7 +233,6 @@ class DataLoader():
                                                   center_point,
                                                   sub_label_shape,
                                                   fill = 'zero')
-
             if(flip):
                 sub_weight = np.flip(sub_weight, -1)
             if(down_sample_rate != 1.0):

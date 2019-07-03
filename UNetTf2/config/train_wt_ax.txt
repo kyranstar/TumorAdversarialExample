@@ -1,6 +1,6 @@
 [data]
 data_root             = ../../Data 1/Pre-operative_TCGA_LGG_NIfTI_and_Segmentations/
-data_names            = kpa1config/train_names_all.txt
+data_names            = config17/train_names_all.txt
 modality_postfix      = [flair, t1, t1Gd, t2]
 label_postfix         = GlistrBoost
 file_postfix          = nii.gz
@@ -26,7 +26,7 @@ learning_rate      = 1e-3
 decay              = 1e-7
 maximal_iteration  = 20000
 snapshot_iteration = 2000
-start_iteration    = 0
+start_iteration    = 20000
 test_iteration     = 100
 test_step          = 10
 model_pre_trained  = 

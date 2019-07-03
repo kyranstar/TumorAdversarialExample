@@ -1,11 +1,11 @@
 [data]
 data_root             = ../../Data 1/Pre-operative_TCGA_LGG_NIfTI_and_Segmentations/
-data_names            = kpa1config/train_names_all.txt
+data_names            = kpa1config/train_names_temp.txt
 modality_postfix      = [flair, t1, t1Gd, t2]
 label_postfix         = GlistrBoost
 file_postfix          = nii.gz
 with_ground_truth     = True
-batch_size            = 5
+batch_size            = 1
 data_shape            = [19, 144, 144, 4]
 label_shape           = [11, 144, 144, 1]
 label_convert_source  = [0, 1, 2, 4]
@@ -14,6 +14,13 @@ batch_slice_direction = axial
 train_with_roi_patch  = False
 label_roi_mask        = 
 roi_patch_margin      = 
+
+[adversarial]
+save_folder			= adversarial_images
+method				= UniformNoise
+eps					= 0.2
+iterations			= 1
+targeted			= True
 
 [network]
 net_type            = MSNet
@@ -26,8 +33,8 @@ learning_rate      = 1e-3
 decay              = 1e-7
 maximal_iteration  = 20000
 snapshot_iteration = 2000
-start_iteration    = 0
+start_iteration    = 20000
 test_iteration     = 100
 test_step          = 10
-model_pre_trained  = 
-model_save_prefix  = model17/kpa1msnet_wt32
+model_pre_trained  = model17/msnet_wt32_20000.ckpt
+model_save_prefix  = model17/msnet_wt32

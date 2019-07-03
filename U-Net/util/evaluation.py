@@ -31,7 +31,9 @@ def get_ground_truth_names(g_folder, patient_names_file, year = 15):
                     gt_name = img_name + '/' + img_name + '.mha'
                     break
             else:
-                if 'seg.' in img_name:
+                if 'GlistrBoost.' in img_name:
+                    gt_name = img_name
+                if 'ManuallyCorrected' in img_name:
                     gt_name = img_name
                     break
         gt_name = os.path.join(patient_dir, gt_name)
@@ -69,18 +71,18 @@ def dice_of_brats_data_set(gt_names, seg_names, type_idx):
                 dice_one_volume.append(temp_dice)
         dice_all_data.append(dice_one_volume)
     return dice_all_data
-    
+
 if __name__ == '__main__':
-    year = 15 # or 17
-    
+    year = 17 # or 17
+
     if(year == 15):
-        s_folder = 'result15'
-        g_folder = '/home/guotwang/data/BRATS2015_Training'
+        s_folder = 'kpa1result15'
+        g_folder = '../../Data 1/Pre-operative_TCGA_LGG_NIfTI_and_Segmentations/'
         patient_names_file = 'config15/test_names.txt'
     else:
-        s_folder = 'result17'
-        g_folder = '/home/guotwang/data/Brats17TrainingData'
-        patient_names_file = 'config15/test_names.txt'
+        s_folder = 'kpa1result17'
+        g_folder = '../../Data 1/Pre-operative_TCGA_LGG_NIfTI_and_Segmentations/'
+        patient_names_file = 'kpa1config/test_names_temp.txt'
 
     test_types = ['whole','core', 'all']
     gt_names  = get_ground_truth_names(g_folder, patient_names_file, year)
@@ -99,4 +101,3 @@ if __name__ == '__main__':
             print('tissue label', [1, 2, 3, 4])
         print('dice mean  ', dice_mean)
         print('dice std   ', dice_std)
- 

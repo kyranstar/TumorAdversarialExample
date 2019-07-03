@@ -21,12 +21,54 @@ from util.data_process import *
 from util.train_test_func import *
 from util.parse_config import parse_config
 from train import NetFactory
-from cleverhans.attacks import FastGradientMethod
+from niftynet.layer.loss_segmentation import LossFunction
+from cleverhans.compat import reduce_max, reduce_sum, reduce_mean
+from attacks import FastGradientMethod
+
+def adv_image_dynamic_shape(temp_imgs, data_shape, label_shape, data_channel,
+                                  class_num, batch_size, sess, net):
+    '''
+    Create one adversarial image with sub regions along z-axis
+    The height and width of input tensor is adapted to those of the input image
+    '''
+    # construct graph
+    [D, H, W] = temp_imgs[0].shape
+    Hx = max(int((H+3)/4)*4, data_shape[1])
+    Wx = max(int((W+3)/4)*4, data_shape[2])
+    data_slice = data_shape[0]
+    label_slice = label_shape[0]
+    full_data_shape = [batch_size, data_slice, Hx, Wx, data_channel]
+    x = tf.placeholder(tf.float32, full_data_shape)
+    predicty = net(x, is_training = True)
+    proby = tf.nn.softmax(predicty)
+
+    preds_max = reduce_max(predicty, 1, keepdims=True)
+    y = tf.to_float(tf.equal(predicty, preds_max))
+    y = tf.stop_gradient(y)
+    y = y / reduce_sum(y, 1, keepdims=True)
+
+    # Create adversarial attack
+    loss_func = LossFunction(n_class=class_num)
+    loss = loss_func(predicty, y)
+    fgsm = FastGradientMethod(net)
+    adv_steps = 2
+    fgsm_params = {'eps': 0.4/adv_steps, 'loss_func': loss}
+    adv_x = fgsm.generate(x, **fgsm_params)
+
+    new_data_shape = [data_slice, Hx, Wx]
+    new_label_shape = [label_slice, Hx, Wx]
+
+    print("Running adversarial attack with %d steps" % adv_steps)
+    for i in range(adv_steps):
+        temp_imgs = volume_probability_prediction(temp_imgs, new_data_shape, new_label_shape, data_channel,
+                                              class_num, batch_size, sess, adv_x, x)
+    return temp_imgs
 
 def test(config_file):
     # 1, load configure file
     config = parse_config(config_file)
     config_data = config['data']
+    config_adv  = config.get('adversarial', None)
     config_net1 = config.get('network1', None)
     config_net2 = config.get('network2', None)
     config_net3 = config.get('network3', None)
@@ -245,6 +287,7 @@ def test(config_file):
             predicty3cr = net3cr(x3cr, is_training = True)
             proby3cr = tf.nn.softmax(predicty3cr)
 
+
     # 3, create session and load trained models
     all_vars = tf.global_variables()
     sess = tf.InteractiveSession()
@@ -309,9 +352,23 @@ def test(config_file):
     margin = config_test.get('roi_patch_margin', 5)
 
     for i in range(image_num):
+        print("Testing network: %d/%d" % (i, image_num))
         [temp_imgs, temp_weight, temp_name, img_names, temp_bbox, temp_size] = dataloader.get_image_data_with_name(i)
 
+        if config_adv:
+            # Run adversarial attack
+            #def adv_net(x, is_training=False):
+            #    return fgsm.generate(x, **fgsm_params)
+            #nets = [adv_net, adv_net, adv_net]
+            #outputs = [adv_x, adv_x, adv_x]
+            #inputs =  [x1, x1, x1]
+            class_num = 4
+            print(temp_imgs[0].shape)
+            temp_imgs = adv_image_dynamic_shape(temp_imgs, data_shape1[:-1], data_shape1[:-1], data_shape1[-1],
+                                                  class_num, batch_size, sess, net1)
+            print("After shape: %s" % str(temp_imgs.shape))
 
+        print("Testing network")
         t0 = time.time()
         # 5.1, test of 1st network
         if(config_net1):
@@ -321,7 +378,6 @@ def test(config_file):
             outputs = [proby1, proby1, proby1]
             inputs =  [x1, x1, x1]
             class_num = class_num1
-
 
             prob1 = test_one_image_three_nets_adaptive_shape(temp_imgs, data_shapes, label_shapes, data_shape1[-1], class_num,
                        batch_size, sess, nets, outputs, inputs, shape_mode = 2)
@@ -450,6 +506,8 @@ def test(config_file):
         test_time.append(time.time() - t0)
         final_label = np.zeros(temp_size, np.int16)
         final_label = set_ND_volume_roi_with_bounding_box_range(final_label, temp_bbox[0], temp_bbox[1], out_label)
+        if config_adv:
+            save_array_as_nifty_volume(temp_imgs, save_folder+"/{0:}_adv.nii.gz".format(temp_name), img_names[0])
         save_array_as_nifty_volume(final_label, save_folder+"/{0:}.nii.gz".format(temp_name), img_names[0])
         print(temp_name)
     test_time = np.asarray(test_time)

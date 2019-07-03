@@ -17,8 +17,9 @@ from niftynet.layer.bn import BNLayer
 from niftynet.layer.convolution import ConvLayer, ConvolutionalLayer
 from niftynet.layer.deconvolution import DeconvolutionalLayer
 from niftynet.layer.elementwise import ElementwiseLayer
+from cleverhans.model import Model
 
-class MSNet(TrainableLayer):
+class MSNet(TrainableLayer, Model):
     """
     Inplementation of WNet, TNet and ENet presented in:
         Wang, Guotai, Wenqi Li, Sebastien Ourselin, and Tom Vercauteren. "Automatic brain tumor segmentation using cascaded anisotropic convolutional neural networks." arXiv preprint arXiv:1709.00382 (2017).
@@ -40,12 +41,12 @@ class MSNet(TrainableLayer):
         self.acti_func = acti_func
         self.base_chns = [32, 32, 32, 32]
         self.downsample_twice = True
-        
+
     def set_params(self, params):
         self.base_chns = params.get('base_feature_number', [32, 32, 32, 32])
         self.acti_func = params.get('acti_func', 'prelu')
         self.downsample_twice = params['downsample_twice']
-        
+
     def layer_op(self, images, is_training):
         block1_1 = ResBlock(self.base_chns[0],
                   kernels = [[1, 3, 3], [1, 3, 3]],
@@ -60,22 +61,22 @@ class MSNet(TrainableLayer):
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block1_2')
-        
-        
+
+
         block2_1 = ResBlock(self.base_chns[1],
                   kernels = [[1, 3, 3], [1, 3, 3]],
                   acti_func=self.acti_func,
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block2_1')
-        
+
         block2_2 = ResBlock(self.base_chns[1],
                   kernels = [[1, 3, 3], [1, 3, 3]],
                   acti_func=self.acti_func,
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block2_2')
-        
+
         block3_1 =  ResBlock(self.base_chns[2],
                   kernels = [[1, 3, 3], [1, 3, 3]],
                   dilation_rates = [[1, 1, 1], [1, 1, 1]],
@@ -83,7 +84,7 @@ class MSNet(TrainableLayer):
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block3_1')
-        
+
         block3_2 =  ResBlock(self.base_chns[2],
                   kernels = [[1, 3, 3], [1, 3, 3]],
                   dilation_rates = [[1, 2, 2], [1, 2, 2]],
@@ -91,7 +92,7 @@ class MSNet(TrainableLayer):
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block3_2')
-        
+
         block3_3 =  ResBlock(self.base_chns[2],
                   kernels = [[1, 3, 3], [1, 3, 3]],
                   dilation_rates = [[1, 3, 3], [1, 3, 3]],
@@ -107,7 +108,7 @@ class MSNet(TrainableLayer):
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block4_1')
-        
+
         block4_2 =  ResBlock(self.base_chns[3],
                   kernels = [[1, 3, 3], [1, 3, 3]],
                   dilation_rates = [[1, 2, 2], [1, 2, 2]],
@@ -115,7 +116,7 @@ class MSNet(TrainableLayer):
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block4_2')
-        
+
         block4_3 =  ResBlock(self.base_chns[3],
                   kernels = [[1, 3, 3], [1, 3, 3]],
                   dilation_rates = [[1, 1, 1], [1, 1, 1]],
@@ -123,7 +124,7 @@ class MSNet(TrainableLayer):
                   w_initializer=self.initializers['w'],
                   w_regularizer=self.regularizers['w'],
                   name = 'block4_3')
-        
+
         fuse1 = ConvolutionalLayer(self.base_chns[0],
                     kernel_size= [3, 1, 1],
                     padding='VALID',
@@ -134,7 +135,7 @@ class MSNet(TrainableLayer):
                     acti_func=self.acti_func,
                     with_bn = True,
                     name='fuse1')
-        
+
         downsample1 = ConvolutionalLayer(self.base_chns[0],
                     kernel_size= [1, 3, 3],
                     stride = [1, 2, 2],
@@ -146,7 +147,7 @@ class MSNet(TrainableLayer):
                     acti_func=self.acti_func,
                     with_bn = True,
                     name='downsample1')
-        
+
         fuse2 = ConvolutionalLayer(self.base_chns[1],
                     kernel_size= [3, 1, 1],
                     padding='VALID',
@@ -156,8 +157,8 @@ class MSNet(TrainableLayer):
                     b_regularizer=self.regularizers['b'],
                     acti_func=self.acti_func,
                     with_bn = True,
-                    name='fuse2')        
-        
+                    name='fuse2')
+
         downsample2 = ConvolutionalLayer(self.base_chns[1],
                     kernel_size= [1, 3, 3],
                     stride = [1, 2, 2],
@@ -169,7 +170,7 @@ class MSNet(TrainableLayer):
                     acti_func=self.acti_func,
                     with_bn = True,
                     name='downsample2')
-        
+
         fuse3 = ConvolutionalLayer(self.base_chns[2],
                     kernel_size= [3, 1, 1],
                     padding='VALID',
@@ -180,7 +181,7 @@ class MSNet(TrainableLayer):
                     acti_func=self.acti_func,
                     with_bn = True,
                     name='fuse3')
-        
+
         fuse4 = ConvolutionalLayer(self.base_chns[3],
                     kernel_size= [3, 1, 1],
                     padding='VALID',
@@ -190,8 +191,8 @@ class MSNet(TrainableLayer):
                     b_regularizer=self.regularizers['b'],
                     acti_func=self.acti_func,
                     with_bn = True,
-                    name='fuse4')    
-                
+                    name='fuse4')
+
         feature_expand1 =  ConvolutionalLayer(self.base_chns[1],
                     kernel_size= [1, 1, 1],
                     stride = [1, 1, 1],
@@ -203,7 +204,7 @@ class MSNet(TrainableLayer):
                     acti_func=self.acti_func,
                     with_bn = True,
                     name='feature_expand1')
-        
+
         feature_expand2 =  ConvolutionalLayer(self.base_chns[2],
                     kernel_size= [1, 1, 1],
                     stride = [1, 1, 1],
@@ -227,7 +228,7 @@ class MSNet(TrainableLayer):
                     acti_func=self.acti_func,
                     with_bn = True,
                     name='feature_expand3')
-                        
+
         centra_slice1 = TensorSliceLayer(margin = 2)
         centra_slice2 = TensorSliceLayer(margin = 1)
         pred1 = ConvLayer(self.num_classes,
@@ -294,7 +295,7 @@ class MSNet(TrainableLayer):
                     acti_func=self.acti_func,
                     with_bn = True,
                     name='pred_up3_2')
-        
+
         final_pred =  ConvLayer(self.num_classes,
                 kernel_size=[1, 3, 3],
                 padding = 'SAME',
@@ -302,8 +303,8 @@ class MSNet(TrainableLayer):
                 w_regularizer=self.regularizers['w'],
                 b_initializer=self.initializers['b'],
                 b_regularizer=self.regularizers['b'],
-                name='final_pred') 
- 
+                name='final_pred')
+
         f1 = images
         f1 = block1_1(f1, is_training)
         f1 = block1_2(f1, is_training)
@@ -315,7 +316,7 @@ class MSNet(TrainableLayer):
         f1 = block2_1(f1, is_training)
         f1 = block2_2(f1, is_training)
         f1 = fuse2(f1, is_training)
-        
+
         f2 = downsample2(f1, is_training)
         if(self.base_chns[1] != self.base_chns[2]):
             f2 = feature_expand2(f2, is_training)
@@ -323,26 +324,26 @@ class MSNet(TrainableLayer):
         f2 = block3_2(f2, is_training)
         f2 = block3_3(f2, is_training)
         f2 = fuse3(f2, is_training)
-        
+
         f3 = f2
         if(self.base_chns[2] != self.base_chns[3]):
-            f3 = feature_expand3(f3, is_training) 
+            f3 = feature_expand3(f3, is_training)
         f3 = block4_1(f3, is_training)
         f3 = block4_2(f3, is_training)
         f3 = block4_3(f3, is_training)
         f3 = fuse4(f3, is_training)
-        
+
         p1 = centra_slice1(f1)
         if(self.downsample_twice):
             p1 = pred_up1(p1, is_training)
         else:
             p1 = pred1(p1)
-         
+
         p2 = centra_slice2(f2)
         p2 = pred_up2_1(p2, is_training)
         if(self.downsample_twice):
             p2 = pred_up2_2(p2, is_training)
-        
+
         p3 = pred_up3_1(f3, is_training)
         if(self.downsample_twice):
             p3 = pred_up3_2(p3, is_training)
@@ -350,6 +351,9 @@ class MSNet(TrainableLayer):
         cat = tf.concat([p1, p2, p3], axis = 4, name = 'concate')
         pred = final_pred(cat)
         return pred
+
+    def fprop(self, x, **kwargs):
+        return {Model.O_LOGITS: self(x, is_training=True)}
 
 class ResBlock(TrainableLayer):
     """
@@ -382,10 +386,10 @@ class ResBlock(TrainableLayer):
             self.dilation_rates = [dilation_rates]
         self.acti_func = acti_func
         self.with_res = with_res
-        
+
         self.initializers = {'w': w_initializer}
         self.regularizers = {'w': w_regularizer}
-        
+
     def layer_op(self, input_tensor, is_training):
         output_tensor = input_tensor
         for i in range(len(self.kernels)):
@@ -410,7 +414,7 @@ class ResBlock(TrainableLayer):
         if self.with_res:
             output_tensor = ElementwiseLayer('SUM')(output_tensor, input_tensor)
         return output_tensor
-    
+
 
 class TensorSliceLayer(TrainableLayer):
     """
@@ -421,7 +425,7 @@ class TensorSliceLayer(TrainableLayer):
         self.layer_name = name
         super(TensorSliceLayer, self).__init__(name=self.layer_name)
         self.margin = margin
-        
+
     def layer_op(self, input_tensor):
         input_shape = input_tensor.get_shape().as_list()
         begin = [0]*len(input_shape)
@@ -430,7 +434,7 @@ class TensorSliceLayer(TrainableLayer):
         size[1] = size[1] - 2* self.margin
         output_tensor = tf.slice(input_tensor, begin, size, name='slice')
         return output_tensor
-    
+
 if __name__ == '__main__':
     x = tf.placeholder(tf.float32, shape = [1, 96, 96, 96, 1])
     y = tf.placeholder(tf.float32, shape = [1, 96, 96, 96, 2])
